@@ -6015,16 +6015,20 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 1cf080b2d9210524cb1c25e56aeaecca, type: 3}
   - {fileID: 21300000, guid: bc605ee3a44efbb4e9d375cb702dad75, type: 3}
   - {fileID: 21300000, guid: c69a39baef23f5d478cd4c5644241da8, type: 3}
+  - {fileID: 21300000, guid: c69a39baef23f5d478cd4c5644241da8, type: 3}
   secondaryDisplay: {fileID: 1914475195}
   secondaryPhases:
   - {fileID: 21300000, guid: 9ea5d88dbd6a933498f42257e5cc1334, type: 3}
   - {fileID: 21300000, guid: de85467fe1e6a4342ac9614c4ff45000, type: 3}
+  - {fileID: 21300000, guid: aef2e276046033b44bb64747b5541d44, type: 3}
   - {fileID: 21300000, guid: aef2e276046033b44bb64747b5541d44, type: 3}
   thirdDisplay: {fileID: 1376462873}
   thirdPhases:
   - {fileID: 21300000, guid: 4895011d7eec24a48b6fb604950d0b87, type: 3}
   - {fileID: 21300000, guid: 8ee4fc624d2c5f542a963c1a1c86f957, type: 3}
   - {fileID: 21300000, guid: 80030839bf691044cb28ffb755844975, type: 3}
+  - {fileID: 21300000, guid: 80030839bf691044cb28ffb755844975, type: 3}
+  gameRestartDelay: 3
 --- !u!4 &2131797590
 Transform:
   m_ObjectHideFlags: 0
