@@ -1,29 +1,41 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class QuestionManager : MonoBehaviour
 {
     [Header("UI References")]
     public TextMeshProUGUI questionText;
     public List<Button> answerButtons;
-    
 
     [Header("Question Settings")]
     public List<Question> allQuestions = new List<Question>();
     public float questionDelay = 1.5f;
 
     [Header("Lock Display Settings")]
-    public Image lockDisplay; // Add this reference in inspector
-    public Sprite[] lockPhases; // Assign 5 sprites in order: [0]=1/5, [1]=2/5... [4]=5/5
+    public Image lockDisplay;
+    public Sprite[] lockPhases;
+
+    [Header("Background Display Settings")]
+    public Image secondaryDisplay;
+    public Sprite[] secondaryPhases;
+
+    [Header("Warning Text Display Settings")]
+    public Image thirdDisplay;
+    public Sprite[] thirdPhases;
+    [SerializeField] float gameRestartDelay = 3f;
 
     private List<Question> questionsToAsk = new List<Question>();
     private int currentQuestionIndex = 0;
     private int correctAnswersCount = 0;
     private bool canAnswer = true;
     private bool isGameOver = false;
+
+    private const int correctAnswersToWin = 3; // ✨ Changed from 5 to 3
+    private const int maxQuestionsPerGame = 5;  // ✨ Limit to 5 questions
 
     private void Start()
     {
@@ -50,13 +62,18 @@ public class QuestionManager : MonoBehaviour
 
         InitializeQuestions();
         DisplayCurrentQuestion();
-        //lockDisplay.enabled = false; // Hide lock at start
     }
 
     void InitializeQuestions()
     {
         questionsToAsk = new List<Question>(allQuestions);
         ShuffleList(questionsToAsk);
+
+        // ✨ Limit to only 5 questions
+        if (questionsToAsk.Count > maxQuestionsPerGame)
+        {
+            questionsToAsk = questionsToAsk.GetRange(0, maxQuestionsPerGame);
+        }
     }
 
     void DisplayCurrentQuestion()
@@ -64,17 +81,20 @@ public class QuestionManager : MonoBehaviour
         if (currentQuestionIndex >= questionsToAsk.Count)
         {
             Debug.Log("Game Over!");
-            Debug.Log($"Correct Answers: {correctAnswersCount}/{allQuestions.Count}");
+            Debug.Log($"Correct Answers: {correctAnswersCount}/{questionsToAsk.Count}");
             isGameOver = true;
+            StartCoroutine(RestartSceneAfterDelay(gameRestartDelay)); // ✨ Restart after 5 sec
             return;
         }
 
-        if (correctAnswersCount >= 5)
+        if (correctAnswersCount >= correctAnswersToWin)
         {
-            Debug.Log("Game Over! You won by answering 5 questions correctly!");
+            Debug.Log("Game Over! You won by answering 3 questions correctly!");
             isGameOver = true;
+            StartCoroutine(RestartSceneAfterDelay(gameRestartDelay)); // ✨ Restart after 5 sec
             return;
         }
+
 
         Question currentQuestion = questionsToAsk[currentQuestionIndex];
 
@@ -122,7 +142,7 @@ public class QuestionManager : MonoBehaviour
         {
             Debug.Log($"Correct! You selected: {selectedAnswer}");
             correctAnswersCount++;
-            UpdateLockDisplay(); // Update lock only on correct answers
+            UpdateDisplays();
         }
         else
         {
@@ -134,20 +154,42 @@ public class QuestionManager : MonoBehaviour
         StartCoroutine(DelayNextQuestion());
     }
 
-    void UpdateLockDisplay()
+    void UpdateDisplays()
     {
-        if (lockPhases.Length == 0 || lockDisplay == null) return;
+        int phaseIndex = Mathf.Clamp(correctAnswersCount - 1, 0, lockPhases.Length - 1);
 
-        // Show lock on first correct answer
-        if (!lockDisplay.enabled && correctAnswersCount > 0)
+        // Update Lock Display
+        if (lockPhases.Length > 0 && lockDisplay != null)
         {
-            lockDisplay.enabled = true;
+            if (!lockDisplay.enabled && correctAnswersCount > 0)
+            {
+                lockDisplay.enabled = true;
+            }
+            lockDisplay.sprite = lockPhases[phaseIndex];
         }
 
-        // Phase 0 = 1st correct, Phase 4 = 5th correct
-        int phaseIndex = Mathf.Clamp(correctAnswersCount - 1, 0, lockPhases.Length - 1);
-        lockDisplay.sprite = lockPhases[phaseIndex];
+        // Update Secondary Display
+        if (secondaryPhases.Length > 0 && secondaryDisplay != null)
+        {
+            if (!secondaryDisplay.enabled && correctAnswersCount > 0)
+            {
+                secondaryDisplay.enabled = true;
+            }
+            secondaryDisplay.sprite = secondaryPhases[phaseIndex];
+        }
+
+        // Update Third Display
+        if (thirdPhases.Length > 0 && thirdDisplay != null)
+        {
+            if (!thirdDisplay.enabled && correctAnswersCount > 0)
+            {
+                thirdDisplay.enabled = true;
+            }
+            thirdDisplay.sprite = thirdPhases[phaseIndex];
+        }
     }
+
+
 
     IEnumerator DelayNextQuestion()
     {
@@ -166,6 +208,13 @@ public class QuestionManager : MonoBehaviour
         }
     }
 
+    IEnumerator RestartSceneAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
     public void RestartGame()
     {
         correctAnswersCount = 0;
@@ -173,6 +222,6 @@ public class QuestionManager : MonoBehaviour
         isGameOver = false;
         InitializeQuestions();
         DisplayCurrentQuestion();
-        lockDisplay.enabled = false; // Reset lock visibility
+        lockDisplay.enabled = false;
     }
 }
