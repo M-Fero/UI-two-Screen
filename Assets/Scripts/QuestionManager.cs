@@ -28,6 +28,15 @@ public class QuestionManager : MonoBehaviour
     public Sprite[] thirdPhases;
     [SerializeField] float gameRestartDelay = 3f;
 
+    [Header("Button Colors")]
+    public Color normalButtonColor = Color.white;
+    public Color wrongButtonColor = Color.red;
+    public Color correctButtonColor = Color.green;
+
+    [Header("Game Over UI")]
+    public GameObject gameOverPanel1;
+    public GameObject gameOverPanel2;
+
     private List<Question> questionsToAsk = new List<Question>();
     private int currentQuestionIndex = 0;
     private int correctAnswersCount = 0;
@@ -62,6 +71,11 @@ public class QuestionManager : MonoBehaviour
 
         InitializeQuestions();
         DisplayCurrentQuestion();
+
+        if (gameOverPanel1 != null)
+            gameOverPanel1.SetActive(false); // ✨ Hide Game Over Panel at start
+        if (gameOverPanel2 != null)
+            gameOverPanel2.SetActive(false); // ✨ Hide Game Over Panel at start
     }
 
     void InitializeQuestions()
@@ -80,12 +94,25 @@ public class QuestionManager : MonoBehaviour
     {
         if (currentQuestionIndex >= questionsToAsk.Count)
         {
-            Debug.Log("Game Over!");
-            Debug.Log($"Correct Answers: {correctAnswersCount}/{questionsToAsk.Count}");
             isGameOver = true;
-            StartCoroutine(RestartSceneAfterDelay(gameRestartDelay)); // ✨ Restart after 5 sec
+
+            if (correctAnswersCount >= correctAnswersToWin)
+            {
+                Debug.Log("Game Over! You won by answering 3 questions correctly!");
+            }
+            else
+            {
+                Debug.Log("Game Over! You failed to answer enough questions correctly!");
+                if (gameOverPanel1 != null)
+                    gameOverPanel1.SetActive(true);// ✨ Show Game Over text on screen
+                if (gameOverPanel2 != null)
+                    gameOverPanel2.SetActive(true);// ✨ Show Game Over text on screen
+            }
+
+            StartCoroutine(RestartSceneAfterDelay(5f));
             return;
         }
+
 
         if (correctAnswersCount >= correctAnswersToWin)
         {
@@ -95,6 +122,7 @@ public class QuestionManager : MonoBehaviour
             return;
         }
 
+        ResetButtonColors();
 
         Question currentQuestion = questionsToAsk[currentQuestionIndex];
 
@@ -143,16 +171,42 @@ public class QuestionManager : MonoBehaviour
             Debug.Log($"Correct! You selected: {selectedAnswer}");
             correctAnswersCount++;
             UpdateDisplays();
+            HighlightButton(selectedIndex, correctButtonColor); // ✨ Highlight correct in Green
         }
         else
         {
             Debug.Log($"Wrong! You selected: {selectedAnswer}. Correct was: {correctAnswer}");
+            HighlightButton(selectedIndex, wrongButtonColor); // ✨ Highlight wrong in Red
         }
+
+        // Disable all buttons after answering
+        //SetButtonsInteractable(false);
 
         currentQuestionIndex++;
 
         StartCoroutine(DelayNextQuestion());
     }
+
+    void HighlightButton(int buttonIndex, Color color)
+    {
+        if (buttonIndex >= 0 && buttonIndex < answerButtons.Count)
+        {
+            ColorBlock cb = answerButtons[buttonIndex].colors;
+            cb.normalColor = color;
+            cb.selectedColor = color;
+            cb.highlightedColor = color;
+            answerButtons[buttonIndex].colors = cb;
+        }
+    }
+
+    //void SetButtonsInteractable(bool interactable)
+    //{
+    //    foreach (var button in answerButtons)
+    //    {
+    //        button.interactable = interactable;
+    //    }
+    //}
+
 
     void UpdateDisplays()
     {
@@ -207,6 +261,18 @@ public class QuestionManager : MonoBehaviour
             list[randomIndex] = temp;
         }
     }
+    void ResetButtonColors()
+    {
+        foreach (var button in answerButtons)
+        {
+            ColorBlock cb = button.colors;
+            cb.normalColor = normalButtonColor;
+            cb.selectedColor = normalButtonColor;
+            cb.highlightedColor = normalButtonColor;
+            button.colors = cb;
+        }
+    }
+
 
     IEnumerator RestartSceneAfterDelay(float delay)
     {
